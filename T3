@@ -1,0 +1,62 @@
+Sub 品目票_入力用3シート読込()
+
+    Dim wbSource As Workbook
+    Dim wsSource As Worksheet
+    Dim wsDest As Worksheet
+    Dim filePath As String
+    Dim sheetNames As Variant
+    Dim nextRow As Long
+    Dim i As Long, lastRow As Long
+
+    ' ファイル選択ダイアログ
+    filePath = Application.GetOpenFilename("Excelファイル (*.xlsx; *.xlsm), *.xlsx; *.xlsm", , "品目票ファイルを選択してください")
+    If filePath = "False" Then Exit Sub
+
+    Application.ScreenUpdating = False
+    Set wbSource = Workbooks.Open(filePath)
+
+    ' 出力先（品目票）シート準備
+    On Error Resume Next
+    Set wsDest = ThisWorkbook.Sheets("品目票")
+    If wsDest Is Nothing Then
+        Set wsDest = ThisWorkbook.Sheets.Add
+        wsDest.Name = "品目票"
+    Else
+        wsDest.Cells.ClearContents
+    End If
+    On Error GoTo 0
+
+    ' ヘッダー行（B列：品名、C列：数量）
+    wsDest.Range("B1:C1").Value = Array("品名", "数量")
+    nextRow = 2
+
+    ' 対象シート名
+    sheetNames = Array("入力用(1)", "入力用(2)", "入力用(3)")
+
+    ' 各シート処理
+    For i = LBound(sheetNames) To UBound(sheetNames)
+        Set wsSource = Nothing
+        On Error Resume Next
+        Set wsSource = wbSource.Sheets(sheetNames(i))
+        On Error GoTo 0
+
+        If Not wsSource Is Nothing Then
+            lastRow = wsSource.Cells(wsSource.Rows.Count, "D").End(xlUp).Row
+
+            Dim r As Long
+            For r = 2 To lastRow
+                If wsSource.Cells(r, 4).Value <> "" Then ' D列が空でない
+                    wsDest.Cells(nextRow, 2).Value = wsSource.Cells(r, 4).Value ' 品名 → B列
+                    wsDest.Cells(nextRow, 3).Value = wsSource.Cells(r, 7).Value ' 所要数 → C列
+                    nextRow = nextRow + 1
+                End If
+            Next r
+        End If
+    Next i
+
+    wbSource.Close SaveChanges:=False
+    Application.ScreenUpdating = True
+
+    MsgBox "3シート（入力用）から品目票の読み込みが完了しました！", vbInformation
+
+End Sub
