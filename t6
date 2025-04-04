@@ -1,4 +1,4 @@
-Sub 必須作業_TS出力()
+Sub 必須作業_TS出力_合計付き()
 
     Dim wsExtra As Worksheet, wsOutput As Worksheet
     Set wsExtra = Worksheets("追加情報")
@@ -9,10 +9,10 @@ Sub 必須作業_TS出力()
     Dim baseRow As Long
     baseRow = wsOutput.Cells(wsOutput.Rows.Count, "B").End(xlUp).Row + 3
 
-    ' 接触面数の読み取り
+    ' 接触面数取得
     接触面数 = wsExtra.Range("C2").Value
 
-    ' 複雑度の自動変換（D2に書き込む）
+    ' 複雑度判定（D2に記録）
     If 接触面数 <= 10 Then
         複雑度 = "標準"
     ElseIf 接触面数 <= 20 Then
@@ -22,7 +22,7 @@ Sub 必須作業_TS出力()
     End If
     wsExtra.Range("D2").Value = 複雑度
 
-    ' 複雑度による時間設定
+    ' 各工程の時間設定（複雑度ごと）
     Dim 擦合時間 As Double, 仮組時間 As Double, 本組時間 As Double
     Select Case 複雑度
         Case "標準": 擦合時間 = 3: 仮組時間 = 12: 本組時間 = 2
@@ -30,29 +30,40 @@ Sub 必須作業_TS出力()
         Case "高": 擦合時間 = 5: 仮組時間 = 20: 本組時間 = 3
     End Select
 
-    ' TS出力に追記
+    ' 各工程時間の出力
+    Dim 合計TS As Double: 合計TS = 0
+
     With wsOutput
         .Cells(baseRow, 2).Value = "モールドベース確認"
-        .Cells(baseRow, 4).Value = 1 ' ← サイズ補正はあとで対応可
+        .Cells(baseRow, 4).Value = 1
+        合計TS = 合計TS + 1
         baseRow = baseRow + 1
 
         .Cells(baseRow, 2).Value = "単品擦り合わせ"
         .Cells(baseRow, 4).Value = 擦合時間
+        合計TS = 合計TS + 擦合時間
         baseRow = baseRow + 1
 
         .Cells(baseRow, 2).Value = "仮組み擦り合わせ"
         .Cells(baseRow, 4).Value = 仮組時間
+        合計TS = 合計TS + 仮組時間
         baseRow = baseRow + 1
 
         .Cells(baseRow, 2).Value = "清掃"
         .Cells(baseRow, 4).Value = 1
+        合計TS = 合計TS + 1
         baseRow = baseRow + 1
 
         .Cells(baseRow, 2).Value = "本組み"
         .Cells(baseRow, 4).Value = 本組時間
+        合計TS = 合計TS + 本組時間
         baseRow = baseRow + 1
+
+        ' 合計行の出力
+        .Cells(baseRow + 1, 3).Value = "必須工程 合計TS"
+        .Cells(baseRow + 1, 4).Value = 合計TS
     End With
 
-    MsgBox "必須作業のTSを出力しました（複雑度：" & 複雑度 & "）", vbInformation
+    MsgBox "必須作業TSの出力と合計が完了しました（複雑度：" & 複雑度 & "）", vbInformation
 
 End Sub
