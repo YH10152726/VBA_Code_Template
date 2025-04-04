@@ -1,4 +1,4 @@
-Sub 必須作業_TS出力_合計付き()
+Sub 必須作業_TS出力_合計付き_追記版()
 
     Dim wsExtra As Worksheet, wsOutput As Worksheet
     Set wsExtra = Worksheets("追加情報")
@@ -6,8 +6,6 @@ Sub 必須作業_TS出力_合計付き()
 
     Dim 接触面数 As Long
     Dim 複雑度 As String
-    Dim baseRow As Long
-    baseRow = wsOutput.Cells(wsOutput.Rows.Count, "B").End(xlUp).Row + 3
 
     ' 接触面数取得
     接触面数 = wsExtra.Range("C2").Value
@@ -30,9 +28,14 @@ Sub 必須作業_TS出力_合計付き()
         Case "高": 擦合時間 = 5: 仮組時間 = 20: 本組時間 = 3
     End Select
 
-    ' 各工程時間の出力
+    ' 出力位置を最終行の3行下に設定（B列基準）
+    Dim baseRow As Long
+    baseRow = wsOutput.Cells(wsOutput.Rows.Count, "B").End(xlUp).Row + 3
+
+    ' TS合計初期化
     Dim 合計TS As Double: 合計TS = 0
 
+    ' 出力処理（重ならない）
     With wsOutput
         .Cells(baseRow, 2).Value = "モールドベース確認"
         .Cells(baseRow, 4).Value = 1
@@ -57,13 +60,13 @@ Sub 必須作業_TS出力_合計付き()
         .Cells(baseRow, 2).Value = "本組み"
         .Cells(baseRow, 4).Value = 本組時間
         合計TS = 合計TS + 本組時間
-        baseRow = baseRow + 1
+        baseRow = baseRow + 2
 
-        ' 合計行の出力
-        .Cells(baseRow + 1, 3).Value = "必須工程 合計TS"
-        .Cells(baseRow + 1, 4).Value = 合計TS
+        ' 合計行
+        .Cells(baseRow, 3).Value = "必須工程 合計TS"
+        .Cells(baseRow, 4).Value = 合計TS
     End With
 
-    MsgBox "必須作業TSの出力と合計が完了しました（複雑度：" & 複雑度 & "）", vbInformation
+    MsgBox "必須作業TSを末尾に追加しました（複雑度：" & 複雑度 & "）", vbInformation
 
 End Sub
