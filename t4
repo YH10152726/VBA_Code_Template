@@ -1,0 +1,25 @@
+'--- 数量に関係ない固定TSカテゴリ（個数無視して1回加算） ---
+' R-PIN
+If InStr(UCase(品名), "R-PIN") > 0 Then
+    ' すでに追加済みでない場合のみ出力（重複防止）
+    If Application.CountIf(wsOutput.Range("C2:C" & outRow), "R-PIN調整") = 0 Then
+        wsOutput.Cells(outRow, 1).Value = 品名
+        wsOutput.Cells(outRow, 2).Value = "-"
+        wsOutput.Cells(outRow, 3).Value = "R-PIN調整"
+        wsOutput.Cells(outRow, 4).Value = 0.5
+        outRow = outRow + 1
+        TS合計 = TS合計 + 0.5
+    End If
+End If
+
+' Oリング
+If InStr(UCase(品名), "Oリング") > 0 Or InStr(UCase(品名), "O-RING") > 0 Then
+    If Application.CountIf(wsOutput.Range("C2:C" & outRow), "水圧試験") = 0 Then
+        wsOutput.Cells(outRow, 1).Value = 品名
+        wsOutput.Cells(outRow, 2).Value = "-"
+        wsOutput.Cells(outRow, 3).Value = "水圧試験"
+        wsOutput.Cells(outRow, 4).Value = 2.0
+        outRow = outRow + 1
+        TS合計 = TS合計 + 2.0
+    End If
+End If
