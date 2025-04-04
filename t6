@@ -1,16 +1,76 @@
-Sub 品名チェック()
+Sub AtoZ_柔軟カウント_TS出力()
 
-    Dim ws As Worksheet
-    Set ws = Worksheets("品目票")
+    Dim wsInput As Worksheet, wsOutput As Worksheet
+    Dim i As Long, lastRow As Long
+    Dim 品名 As String, 数量 As Variant
+    Dim categoryList As Variant
+    categoryList = Array("キャビコマ", "キャビコア", "ソクヘキ", "コア", "コマ")
 
-    Dim lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
+    Dim matchDict As Object
+    Set matchDict = CreateObject("Scripting.Dictionary")
 
-    MsgBox "B列の最終行は：" & lastRow
+    Set wsInput = Worksheets("品目票")
+    On Error Resume Next
+    Set wsOutput = Worksheets("TS出力")
+    If wsOutput Is Nothing Then
+        Set wsOutput = Worksheets.Add
+        wsOutput.Name = "TS出力"
+    End If
+    On Error GoTo 0
 
-    Dim i As Long
+    ' データ収集
+    lastRow = wsInput.Cells(wsInput.Rows.Count, "B").End(xlUp).Row
+
     For i = 2 To lastRow
-        MsgBox "行" & i & " の品名は：" & ws.Cells(i, 2).Value
+        品名 = wsInput.Cells(i, 2).Value
+        数量 = wsInput.Cells(i, 3).Value
+        If 数量 = "" Or Not IsNumeric(数量) Then 数量 = 1
+
+        ' 前処理（空白削除）
+        品名 = Replace(品名, "　", "")
+        品名 = Replace(品名, " ", "")
+
+        Dim cat As Variant
+        For Each cat In categoryList
+            If InStr(品名, cat) > 0 Then
+                Dim letter As String
+                letter = Mid(品名, InStr(品名, cat) + Len(cat), 1)
+
+                If letter >= "A" And letter <= "Z" Then
+                    Dim key As String
+                    key = cat & letter
+                    If Not matchDict.exists(key) Then matchDict(key) = 0
+                    matchDict(key) = matchDict(key) + 数量
+                End If
+            End If
+        Next cat
     Next i
 
+    ' 出力
+    Dim outRow As Long: outRow = wsOutput.Cells(wsOutput.Rows.Count, "B").End(xlUp).Row + 3
+    wsOutput.Cells(outRow, 2).Value = "分類"
+    wsOutput.Cells(outRow, 3).Value = "種別"
+    wsOutput.Cells(outRow, 4).Value = "数量"
+    wsOutput.Cells(outRow, 5).Value = "TS時間（0.3h/個）"
+    outRow = outRow + 1
+
+    Dim key As Variant, totalTS As Double
+    For Each key In matchDict.Keys
+        Dim catName As String: catName = Left(key, Len(key) - 1)
+        Dim typeLetter As String: typeLetter = Right(key, 1)
+        Dim qty As Long: qty = matchDict(key)
+
+        wsOutput.Cells(outRow, 2).Value = catName
+        wsOutput.Cells(outRow, 3).Value = typeLetter
+        wsOutput.Cells(outRow, 4).Value = qty
+        wsOutput.Cells(outRow, 5).Value = qty * 0.3
+
+        totalTS = totalTS + qty * 0.3
+        outRow = outRow + 1
+    Next key
+
+    wsOutput.Cells(outRow + 1, 4).Value = "合計TS"
+    wsOutput.Cells(outRow + 1, 5).Value = totalTS
+
+    MsgBox "柔軟カウント完了：TS合計 " & totalTS & "h", vbInformation
 End Sub
