@@ -1,0 +1,13 @@
+Dim wordKey As Variant
+
+For i = 2 To lastRow
+    品名 = wsInput.Cells(i, 2).Value
+    数量 = wsInput.Cells(i, 3).Value
+    If 数量 = "" Or Not IsNumeric(数量) Then 数量 = 1
+
+    For Each wordKey In countDict.Keys
+        If InStr(品名, wordKey) > 0 Then
+            countDict(wordKey) = countDict(wordKey) + 数量
+        End If
+    Next wordKey
+Next i
