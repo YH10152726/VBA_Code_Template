@@ -1,13 +1,57 @@
-Dim wordKey As Variant
+Sub 必須作業_TS出力()
 
-For i = 2 To lastRow
-    品名 = wsInput.Cells(i, 2).Value
-    数量 = wsInput.Cells(i, 3).Value
-    If 数量 = "" Or Not IsNumeric(数量) Then 数量 = 1
+    Dim wsExtra As Worksheet, wsOutput As Worksheet
+    Set wsExtra = Worksheets("追加情報")
+    Set wsOutput = Worksheets("TS出力")
 
-    For Each wordKey In countDict.Keys
-        If InStr(品名, wordKey) > 0 Then
-            countDict(wordKey) = countDict(wordKey) + 数量
-        End If
-    Next wordKey
-Next i
+    Dim 接触面数 As Long
+    Dim 複雑度 As String
+    Dim baseRow As Long
+    baseRow = wsOutput.Cells(wsOutput.Rows.Count, "B").End(xlUp).Row + 3
+
+    ' 接触面数取得
+    接触面数 = wsExtra.Range("C2").Value
+
+    ' 複雑度変換（自動でD2に書き込む）
+    If 接触面数 <= 10 Then
+        複雑度 = "標準"
+    ElseIf 接触面数 <= 20 Then
+        複雑度 = "中"
+    Else
+        複雑度 = "高"
+    End If
+    wsExtra.Range("D2").Value = 複雑度
+
+    ' 複雑度に応じた時間
+    Dim 擦合時間 As Double, 仮組時間 As Double, 本組時間 As Double
+    Select Case 複雑度
+        Case "標準": 擦合時間 = 3: 仮組時間 = 12: 本組時間 = 2
+        Case "中": 擦合時間 = 4: 仮組時間 = 16: 本組時間 = 2.5
+        Case "高": 擦合時間 = 5: 仮組時間 = 20: 本組時間 = 3
+    End Select
+
+    ' TS出力
+    With wsOutput
+        .Cells(baseRow, 2).Value = "モールドベース確認"
+        .Cells(baseRow, 4).Value = 1 ' 基本時間（後でサイズ補正も可）
+        baseRow = baseRow + 1
+
+        .Cells(baseRow, 2).Value = "単品擦り合わせ"
+        .Cells(baseRow, 4).Value = 擦合時間
+        baseRow = baseRow + 1
+
+        .Cells(baseRow, 2).Value = "仮組み擦り合わせ"
+        .Cells(baseRow, 4).Value = 仮組時間
+        baseRow = baseRow + 1
+
+        .Cells(baseRow, 2).Value = "清掃"
+        .Cells(baseRow, 4).Value = 1
+        baseRow = baseRow + 1
+
+        .Cells(baseRow, 2).Value = "本組み"
+        .Cells(baseRow, 4).Value = 本組時間
+        baseRow = baseRow + 1
+    End With
+
+    MsgBox "必須工程TSを追加しました（複雑度：" & 複雑度 & "）", vbInformation
+End Sub
