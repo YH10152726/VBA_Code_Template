@@ -1,6 +1,0 @@
-Dim w As Variant, h As Variant, cs As Variant, cf As Variant
-w = wsExtra.Range("B2").Value
-h = wsExtra.Range("B3").Value
-cs = wsExtra.Range("C2").Value
-cf = wsExtra.Range("D2").Value
-Debug.Print "B2(幅) =", w, " B3(高さ) =", h, " C2(接触面数) =", cs, " D2(複雑度) =", cf
