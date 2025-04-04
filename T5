@@ -1,0 +1,81 @@
+Sub AtoZ分類カウントとTS出力()
+
+    Dim wsInput As Worksheet, wsOutput As Worksheet
+    Dim categories As Variant, letters As Variant
+    Dim i As Long, j As Long
+    Dim 品名 As String, 数量 As Variant
+    Dim countDict As Object
+    Set countDict = CreateObject("Scripting.Dictionary")
+    
+    ' 初期設定
+    Set wsInput = Worksheets("品目票")
+    On Error Resume Next
+    Set wsOutput = Worksheets("TS出力")
+    If wsOutput Is Nothing Then
+        Set wsOutput = Worksheets.Add
+        wsOutput.Name = "TS出力"
+    Else
+        ' 追記するのでクリアしない
+    End If
+    On Error GoTo 0
+    
+    ' カテゴリとA〜Zを定義
+    categories = Array("キャビコマ", "キャビコア", "ソクヘキ", "コア", "コマ")
+    letters = Split("A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z", ",")
+
+    ' 全件カウント初期化
+    For i = 0 To UBound(categories)
+        For j = 0 To UBound(letters)
+            countDict(categories(i) & letters(j)) = 0
+        Next j
+    Next i
+
+    ' データ読み込み＆カウント
+    Dim lastRow As Long
+    lastRow = wsInput.Cells(wsInput.Rows.Count, "B").End(xlUp).Row
+
+    For i = 2 To lastRow
+        品名 = wsInput.Cells(i, 2).Value
+        数量 = wsInput.Cells(i, 3).Value
+        If 数量 = "" Or Not IsNumeric(数量) Then 数量 = 1
+
+        For Each key In countDict.Keys
+            If InStr(品名, key) > 0 Then
+                countDict(key) = countDict(key) + 数量
+            End If
+        Next key
+    Next i
+
+    ' 出力位置を決める
+    Dim baseRow As Long
+    baseRow = wsOutput.Cells(wsOutput.Rows.Count, "B").End(xlUp).Row + 3
+
+    wsOutput.Cells(baseRow, 2).Value = "分類"
+    wsOutput.Cells(baseRow, 3).Value = "種別"
+    wsOutput.Cells(baseRow, 4).Value = "数量"
+    wsOutput.Cells(baseRow, 5).Value = "TS時間（0.3h/個）"
+    baseRow = baseRow + 1
+
+    Dim totalTS As Double: totalTS = 0
+
+    For i = 0 To UBound(categories)
+        For j = 0 To UBound(letters)
+            Dim key As String
+            key = categories(i) & letters(j)
+            If countDict(key) > 0 Then
+                wsOutput.Cells(baseRow, 2).Value = categories(i)
+                wsOutput.Cells(baseRow, 3).Value = letters(j)
+                wsOutput.Cells(baseRow, 4).Value = countDict(key)
+                wsOutput.Cells(baseRow, 5).Value = countDict(key) * 0.3
+                totalTS = totalTS + countDict(key) * 0.3
+                baseRow = baseRow + 1
+            End If
+        Next j
+    Next i
+
+    wsOutput.Cells(baseRow + 1, 4).Value = "合計TS"
+    wsOutput.Cells(baseRow + 1, 5).Value = totalTS
+
+    MsgBox "A〜Z分類のカウントとTS出力が完了しました！", vbInformation
+
+End Sub
