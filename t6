@@ -1,9 +1,11 @@
-Dim wordKey As Variant
-
 For i = 2 To lastRow
     品名 = wsInput.Cells(i, 2).Value
     数量 = wsInput.Cells(i, 3).Value
     If 数量 = "" Or Not IsNumeric(数量) Then 数量 = 1
+
+    ' 品名から全角・半角スペースを除去（正規化）
+    品名 = Replace(品名, "　", "")  ' 全角スペース
+    品名 = Replace(品名, " ", "")   ' 半角スペース
 
     For Each wordKey In countDict.Keys
         If InStr(品名, wordKey) > 0 Then
