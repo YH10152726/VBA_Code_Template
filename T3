@@ -1,0 +1,69 @@
+Private Sub UserForm_Initialize()
+    ' 焼入れ先
+    With cboDest
+        .Clear
+        .AddItem "エジソン"        ' 内部コード "E"
+        .AddItem "リヒト精工"      ' 内部コード "R"
+        .AddItem "光陽"            ' 内部コード "K"
+    End With
+
+    ' 材質
+    With cboMaterial
+        .Clear
+        .AddItem "DC53"
+        .AddItem "HRC53"
+        .AddItem "SKH51"
+    End With
+
+    ' 焼入れ処理
+    With cboProcess
+        .Clear
+        .AddItem "高温戻し×3"      ' 内部コード "HT3"
+        .AddItem "高温戻し×2"      ' 内部コード "HT2"
+        .AddItem "低温戻し×2"      ' 内部コード "LT2"
+    End With
+End Sub
+
+Private Sub cmdGenerate_Click()
+    Dim destCode As String, materialCode As String, processCode As String
+    Dim barcodeStr As String
+
+    ' 各コンボボックスの選択をチェック
+    If cboDest.ListIndex = -1 Or cboMaterial.ListIndex = -1 Or cboProcess.ListIndex = -1 Then
+        MsgBox "すべての項目を選択してください。", vbExclamation
+        Exit Sub
+    End If
+
+    ' 焼入れ先の内部コード（マッピング）
+    Select Case cboDest.Value
+        Case "エジソン": destCode = "E"
+        Case "リヒト精工": destCode = "R"
+        Case "光陽": destCode = "K"
+        Case Else
+            destCode = ""
+    End Select
+
+    ' 材質はそのまま
+    materialCode = cboMaterial.Value
+
+    ' 焼入れ処理の内部コード（マッピング）
+    Select Case cboProcess.Value
+        Case "高温戻し×3": processCode = "HT3"
+        Case "高温戻し×2": processCode = "HT2"
+        Case "低温戻し×2": processCode = "LT2"
+        Case Else
+            processCode = ""
+    End Select
+
+    ' ハイフンで連結して最終的なバーコード文字列を作成
+    barcodeStr = destCode & "-" & materialCode & "-" & processCode
+
+    ' 結果を確認（必要に応じて表示）
+    MsgBox "生成されるバーコードは: " & barcodeStr
+
+    ' 生成したバーコード文字列をもとにバーコード画像生成のサブルーチンを呼び出す
+    Call GenerateBarcodeFromText(barcodeStr)
+
+    ' フォームを閉じる（またはクリアする）
+    Unload Me
+End Sub
