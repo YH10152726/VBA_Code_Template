@@ -1,0 +1,78 @@
+Option Explicit
+
+Sub DecodeBarcodeToOutput()
+    Dim barcodeStr As String
+    Dim parts() As String
+    Dim orderDest As String, material As String, processStr As String
+    Dim wsOut As Worksheet
+    Dim nextRow As Long
+    
+    ' バーコード文字列の入力を求める（例："E-DC53-HT3"）
+    barcodeStr = InputBox("バーコードを入力してください。" & vbCrLf & _
+                           "形式: 発注先コード-材質コード-焼入れ処理コード" & vbCrLf & _
+                           "例: E-DC53-HT3", "バーコード入力")
+    If barcodeStr = "" Then Exit Sub
+    
+    ' ハイフンで分割して各項目を取得
+    parts = Split(barcodeStr, "-")
+    If UBound(parts) <> 2 Then
+        MsgBox "入力形式が正しくありません。例: E-DC53-HT3", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 発注先のコードに対応する日本語表記
+    Select Case parts(0)
+        Case "E"
+            orderDest = "エジソン"
+        Case "R"
+            orderDest = "リヒト"
+        Case "K"
+            orderDest = "光陽"
+        Case Else
+            MsgBox "無効な発注先コードです。", vbExclamation
+            Exit Sub
+    End Select
+    
+    ' 材質はそのまま採用。ただし、入力値が有効なものかチェック（任意）
+    material = parts(1)
+    If material <> "DC53" And material <> "SKH51" And material <> "HPM38" Then
+        MsgBox "無効な材質コードです。", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 焼入れ処理のコードに対応する日本語表記
+    Select Case parts(2)
+        Case "HT3"
+            processStr = "高温戻し×3"
+        Case "HT2"
+            processStr = "高温戻し×2"
+        Case "LT2"
+            processStr = "低温戻し×2"
+        Case Else
+            MsgBox "無効な焼入れ処理コードです。", vbExclamation
+            Exit Sub
+    End Select
+    
+    ' 出力先シート "出力" が存在するかチェック。なければ新規作成。
+    On Error Resume Next
+    Set wsOut = ThisWorkbook.Worksheets("出力")
+    On Error GoTo 0
+    If wsOut Is Nothing Then
+        Set wsOut = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
+        wsOut.Name = "出力"
+        ' ヘッダー行の作成
+        wsOut.Range("A1").Value = "バーコード"
+        wsOut.Range("B1").Value = "発注先"
+        wsOut.Range("C1").Value = "材質"
+        wsOut.Range("D1").Value = "焼入れ処理"
+    End If
+    
+    ' 出力シートの次の空行番号を取得（ヘッダーは1行目）
+    nextRow = wsOut.Cells(wsOut.Rows.Count, "A").End(xlUp).Row + 1
+    wsOut.Cells(nextRow, "A").Value = barcodeStr
+    wsOut.Cells(nextRow, "B").Value = orderDest
+    wsOut.Cells(nextRow, "C").Value = material
+    wsOut.Cells(nextRow, "D").Value = processStr
+    
+    MsgBox "バーコード情報が出力シートに転記されました。", vbInformation
+End Sub
