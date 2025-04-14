@@ -1,0 +1,3 @@
+Sub ShowBarcodeGeneratorForm()
+    frmBarcodeGenerator.Show
+End Sub
