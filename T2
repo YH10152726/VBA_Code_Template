@@ -1,132 +1,69 @@
-Option Explicit
+Private Sub UserForm_Initialize()
+    ' 焼入れ先のコンボボックスに選択肢を追加
+    With cboDest
+        .Clear
+        .AddItem "エジソン"
+        .AddItem "リヒト精工"
+        .AddItem "光陽"
+    End With
 
-' 配列内から Target2 の値がある位置（0始まり）を返す関数
-Function IndexNumber(ByVal Target1 As Variant, ByVal Target2 As String) As Integer
-    Dim i As Integer
-    For i = 0 To UBound(Target1)
-        If Target1(i) = Target2 Then Exit For
-    Next i
-    IndexNumber = i
-End Function
+    ' 材質のコンボボックスに選択肢を追加
+    With cboMaterial
+        .Clear
+        .AddItem "DC53"
+        .AddItem "HRC53"
+        .AddItem "SKH51"
+    End With
 
-Sub GenerateBarcodeFromSelectedCells()
-    Dim textcode As Variant
-    Dim mynumber As Variant
-    Dim mycode As String
-    Dim c As Range
-    Dim i As Integer, a As Integer, q As Integer, x As Integer, y As Integer, m As Integer
-    Dim t As Long
-    Dim shTemp As Worksheet, shMain As Worksheet
-    
-    ' Code128の各パターン（バー・空白の幅の数字列）を格納
-    textcode = Array( _
-        212222, 222122, 222221, 121223, 121322, 131222, 122213, 122312, 132212, _
-        221213, 221312, 231212, 112232, 122132, 122231, 113222, 123122, 123221, _
-        223211, 221132, 221231, 213212, 223112, 312131, 311222, 321122, 321221, _
-        312212, 322112, 322211, 212123, 212321, 232121, 111323, 131123, 131321, _
-        112313, 132113, 132311, 211313, 231113, 231311, 112133, 112331, 132131, _
-        113123, 113321, 133121, 313121, 211331, 231131, 213113, 213311, 213131, _
-        311123, 311321, 331121, 312113, 312311, 332111, 314111, 221411, 431111, _
-        111224, 111422, 121124, 121421, 141122, 141221, 112214, 112412, 122114, _
-        122411, 142112, 142211, 241211, 221114, 413111, 241112, 134111, 111242, _
-        121142, 121241, 114212, 124112, 124211, 411212, 421112, 421211, 212141, _
-        214121, 412121, 111143, 111341, 131141, 114113, 114311, 411113, 411311, _
-        113141, 114131, 311141, 411131)
-    
-    ' Code128 Code B 用の文字リスト
-    mynumber = Array(" ", "!", """", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/", _
-                     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", _
-                     "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", _
-                     "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "\", "]", "^", "_", _
-                     "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", _
-                     "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~", "DEL", _
-                     "FNC 3", "FNC 2", "SHIFT", "CODE C", "FNC 4", "CODE A", "FNC 1")
-    
-    Set shMain = ActiveSheet
-    
-    ' バーコードを貼付ける位置を、選択セルから何列右か入力
-    x = InputBox("何列右に貼り付けますか？", "バーコード貼付先指定")
-    
-    ' 一時シートを作成（バーコード描画用）
-    Worksheets.Add
-    ActiveSheet.Name = "TempBarcode"
-    Set shTemp = ActiveSheet
-    
-    ' 一時シートの設定：細かいセル幅、行高さ、背景色、フォントサイズ等
-    shTemp.Cells.Interior.Color = RGB(255, 255, 255)  ' 白
-    shTemp.Cells.ColumnWidth = 0.08
-    shTemp.Rows("2:2").RowHeight = 15
-    shTemp.Rows("3:3").RowHeight = 8
-    shTemp.Cells.Font.Size = 6
-    
-    shMain.Activate
-    
-    ' 選択された各セルについてバーコードを生成する
-    For Each c In Selection
-        ' ※ここでは対象セルにバーコード用テキスト（例："E-DC53-HT3"）が入力されているものとする
-        ' まず、開始コードとしてCode Bの値 104 を表すパターンを設定する（ここでは "104" と文字列で示す）
-        mycode = "104"
-        
-        ' 対象文字列の各文字をループし、対応するコードパターンを連結
-        For i = 1 To Len(c.Value)
-            ' Mid(c.Value, i, 1) で1文字ずつ取り出し、mynumber 配列内での位置を取得（IndexNumber 関数使用）
-            mycode = mycode & textcode(IndexNumber(mynumber, Mid(c.Value, i, 1)))
-        Next i
-        
-        ' チェックディジットの計算（Code128 Code Bの場合、開始値104から開始）
-        t = 104
-        For a = 1 To Len(c.Value)
-            t = t + a * IndexNumber(mynumber, Mid(c.Value, a, 1))
-        Next a
-        mycode = mycode & textcode(t Mod 103)
-        
-        ' ストップコードのパターンを追加（ここでは既存のサンプルパターン "23311129" を使用）
-        mycode = mycode & "23311129"
-        
-        ' 一時シート上でバーコード描画（行 2 を使用）
-        shTemp.Activate
-        m = 1
-        For q = 1 To Len(mycode)
-            If q Mod 2 = 1 Then
-                ' 奇数桁：白の幅のセルをスキップ（数字分だけ列を進める）
-                For y = 1 To CInt(Mid(mycode, q, 1))
-                    m = m + 1
-                Next y
-            Else
-                ' 偶数桁：黒いバーとして、セル背景色を黒に設定しながら列を進める
-                For y = 1 To CInt(Mid(mycode, q, 1))
-                    shTemp.Cells(2, m).Interior.Color = RGB(0, 0, 0)
-                    m = m + 1
-                Next y
-            End If
-        Next q
-        
-        ' 一時シート上のバーコード部分を画像としてコピー
-        shTemp.Range(shTemp.Cells(2, 1), shTemp.Cells(2, m)).CopyPicture Appearance:=xlScreen, Format:=xlPicture
-        
-        ' メインシートに戻り、対象セルの右側（オフセット x 列）に貼り付け
-        shMain.Activate
-        c.Offset(0, x).Select
-        ActiveSheet.Paste
-        
-        ' 貼り付けた画像のサイズ・位置を、元のセルに合わせて調整する
-        With Selection
-            .ShapeRange.LockAspectRatio = msoFalse
-            .Height = c.Height - 4
-            .Width = c.Offset(0, x).Width - 4
-            .Left = c.Offset(0, x).Left + (c.Offset(0, x).Width - .Width) / 2
-            .Top = c.Offset(0, x).Top + (c.Offset(0, x).Height - .Height) / 2
-        End With
-        
-        ' 次のバーコード生成に備えて一時シートをクリア
-        shTemp.Cells.ClearFormats
-        shTemp.Cells.Interior.Color = RGB(255, 255, 255)
-    Next c
-    
-    ' 一時シートを削除
-    Application.DisplayAlerts = False
-    shTemp.Delete
-    Application.DisplayAlerts = True
-    
-    MsgBox "バーコードが生成され、貼付けされました。", vbInformation
+    ' 焼入れ処理のコンボボックスに選択肢を追加
+    With cboProcess
+        .Clear
+        .AddItem "高温戻し×3"
+        .AddItem "高温戻し×2"
+        .AddItem "低温戻し×2"
+    End With
+End Sub
+
+Private Sub cmdGenerate_Click()
+    Dim destCode As String, materialCode As String, processCode As String
+    Dim barcodeStr As String
+
+    ' 各コンボボックスが選択されているかチェック
+    If cboDest.ListIndex = -1 Or cboMaterial.ListIndex = -1 Or cboProcess.ListIndex = -1 Then
+        MsgBox "すべての項目を選択してください。", vbExclamation
+        Exit Sub
+    End If
+
+    ' 焼入れ先の内部コードへのマッピング
+    Select Case cboDest.Value
+        Case "エジソン": destCode = "E"
+        Case "リヒト精工": destCode = "R"
+        Case "光陽": destCode = "K"
+        Case Else
+            destCode = ""
+    End Select
+
+    ' 材質はそのまま採用
+    materialCode = cboMaterial.Value
+
+    ' 焼入れ処理の内部コードへのマッピング
+    Select Case cboProcess.Value
+        Case "高温戻し×3": processCode = "HT3"
+        Case "高温戻し×2": processCode = "HT2"
+        Case "低温戻し×2": processCode = "LT2"
+        Case Else
+            processCode = ""
+    End Select
+
+    ' 組み立て：内部コードをハイフンで連結してバーコード文字列を作成
+    barcodeStr = destCode & "-" & materialCode & "-" & processCode
+
+    ' 確認のためメッセージで表示
+    MsgBox "生成されるバーコード: " & barcodeStr
+
+    ' 生成したバーコード文字列を使って、バーコード画像生成マクロを呼び出す
+    Call GenerateBarcodeFromText(barcodeStr)
+
+    ' ユーザーフォームを閉じる
+    Unload Me
 End Sub
