@@ -1,3 +1,66 @@
-Sub ShowBarcodeGeneratorForm()
-    frmBarcodeGenerator.Show
+Sub OutputHeatTreatmentInfo()
+    Dim wsReg As Worksheet
+    Dim wsOut As Worksheet
+    Dim rng As Range
+    Dim rFound As Range
+    Dim searchKey As String
+    Dim nextRow As Long
+    
+    ' -------------------------------
+    ' 1. バーコード文字列の取得
+    ' -------------------------------
+    searchKey = InputBox("バーコード情報を入力してください（例：E-DC53-HT3）", "バーコード読み取り")
+    searchKey = Trim(searchKey)
+    If searchKey = "" Then
+        MsgBox "バーコードが入力されていません。", vbExclamation
+        Exit Sub
+    End If
+    
+    ' -------------------------------
+    ' 2. 登録情報シートから該当レコードを検索
+    ' -------------------------------
+    ' 「登録情報」シートには、以下のレイアウトでデータが登録されている前提です。
+    '  A列：バーコード（例："E-DC53-HT3"）
+    '  B列：焼入先（例："エジソン"）
+    '  C列：材質（例："DC53"）
+    '  D列：焼入れ処理（例："高温戻し×3"）
+    Set wsReg = ThisWorkbook.Worksheets("登録情報")
+    Set rng = wsReg.Range("A:A")
+    
+    Set rFound = rng.Find(What:=searchKey, LookIn:=xlValues, LookAt:=xlWhole)
+    If rFound Is Nothing Then
+        MsgBox "登録情報に該当するデータが見つかりませんでした。", vbExclamation
+        Exit Sub
+    End If
+    
+    ' -------------------------------
+    ' 3. 出力シートの準備
+    ' -------------------------------
+    On Error Resume Next
+    Set wsOut = ThisWorkbook.Worksheets("出力")
+    On Error GoTo 0
+    If wsOut Is Nothing Then
+        Set wsOut = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
+        wsOut.Name = "出力"
+        ' ヘッダー行の設定
+        With wsOut
+            .Range("A1").Value = "バーコード"
+            .Range("B1").Value = "焼入先"
+            .Range("C1").Value = "材質"
+            .Range("D1").Value = "焼入れ処理"
+        End With
+    End If
+    
+    ' 出力シートで、次の空行を探す（ヘッダーが1行目の場合）
+    nextRow = wsOut.Cells(wsOut.Rows.Count, "A").End(xlUp).Row + 1
+    
+    ' -------------------------------
+    ' 4. データの転記
+    ' -------------------------------
+    wsOut.Cells(nextRow, "A").Value = searchKey
+    wsOut.Cells(nextRow, "B").Value = rFound.Offset(0, 1).Value   ' 焼入先はB列
+    wsOut.Cells(nextRow, "C").Value = rFound.Offset(0, 2).Value   ' 材質はC列
+    wsOut.Cells(nextRow, "D").Value = rFound.Offset(0, 3).Value   ' 焼入れ処理はD列
+    
+    MsgBox "登録情報が出力シートに転記されました。", vbInformation
 End Sub
