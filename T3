@@ -1,7 +1,14 @@
-Function IndexNumber(ByVal Target1 As Variant, ByVal Target2 As String) As Integer
-    Dim i As Integer
-    For i = 0 To UBound(Target1)
-        If Target1(i) = Target2 Then Exit For
-    Next i
-    IndexNumber = i
-End Function
+
+
+お世話になっております。
+〇〇株式会社の〇〇です。
+
+この度は蝋試験に関するご丁寧なご返信と資料のご提供、誠にありがとうございました。
+実際に使用されている設備について詳しく教えていただき、大変参考になりました。
+
+今後の検討にあたり、可能であれば、実際に装置を使用されている様子を拝見させていただければと考えております。
+その際に、こちらで準備が必要なもの（ワックス材や試作用の金型など）がありましたら、事前に教えていただけますと幸いです。
+
+なお、社内での調整が必要な部分もございますので、一度社内で検討のうえ、改めてご相談させていただければと思っております。
+
+引き続きどうぞよろしくお願いいたします。
