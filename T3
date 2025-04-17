@@ -1,74 +1,50 @@
-■ 改善提案書
-
-タイトル：
-金型トライ前の不具合検出に向けた「ワックス試験検証」の導入提案
-
-⸻
-
-1. 提案の背景・目的
-
-金型組立後、初回成形トライにおいて「当たり不良」「バリ」「ガス抜け不良」「組付ミス」などが原因で手戻りが発生し、再トライや補修に時間とコストがかかっている。
-本提案では、成形機を使わずに金型単体で製品形状を再現できるワックス試験を導入し、不具合の早期発見・修正によるリードタイム短縮と品質安定化を図る。
-
-⸻
-
-2. ワックス試験の概要
-	•	使用機器：GEFIE社製 射出式ワックス試験機（参考）
-シリンダー内で粉状ワックスを加熱・融解し、圧縮空気で金型キャビティに射出
-	•	使用ワックス材：
-	•	LJ832Bなどの専用ワックス（融点：約85℃、収縮率：0.5%程度）
-	•	ミスミ製 赤・青モデリングワックス（重力注入用、柔軟性・寸法精度で選択可）
-	•	試験条件例：
-	•	予熱：約30分（ワックス・金型共）
-	•	射出時間：約10秒（ノズルをスプルー口に密着）
-	•	金型予熱：25～30℃（厚肉品に有効）
-
-⸻
-
-3. 試験手順（標準フロー案）
-	1.	金型組立完了直後にワックス試験を実施
-	2.	ワックス模型を取り出し、当たり・バリ・ヒケ等を確認
-	3.	不具合箇所にマーキングし、手仕上げ修正
-	4.	再度ワックス充填し、改善結果を確認
-	5.	問題なければ、成形トライ工程へ移行
-
-⸻
-
-4. 判定基準とチェック例
-	•	パーティングラインに0.1mm以上の膜 → バリ発生と判定
-	•	型締め跡、欠け、充填ムラ → 当たり／干渉の兆候
-	•	ワックスが脆く欠ける → 過剰な絞り・通気不良の疑い
-
-→ 写真付きチェックリスト化により、作業者レベル問わず安定した判定が可能
-
-⸻
-
-5. 導入効果と事例
-	•	初回トライ前に不具合を発見・修正 → 補修工数と時間を削減
-	•	例：ガイドピン干渉による隙間をワックス模型で早期検出→修正→成形バリゼロ
-	•	成形機の占有ゼロ → 生産ラインを止めずに検証可能
-	•	試作→修正→再試作のサイクルが数十分で完了
-	•	再使用可能なワックス使用でコスト低減
-
-⸻
-
-6. 標準化のポイント（社内展開時）
-	•	ワックスの種類・融点の統一（再現性確保）
-	•	射出条件（温度・圧力・時間）のマニュアル化
-	•	不具合判定基準の明文化（チェックシート化）
-	•	写真記録と履歴管理による品質トレーサビリティ確保
-ステップ
-内容
-STEP1
-外注・協力会社の事例見学・試作協力依頼
-STEP2
-社内金型1型での試験導入（パイロット）
-STEP3
-使用条件・判定基準の社内標準化
-STEP4
-横展開（全金型への展開・ルール化）
-8. 結論
-
-ワックス試験は、低コスト・短時間で実施可能な金型検証手法であり、
-初回トライ前の不具合削減、リードタイム短縮、再現性ある品質管理体制の構築に大きく寄与する。
-今後の金型製作工程における標準工程としての導入を強く推奨する。
+Sub CreateSortedPlanVsActualChart()
+    Dim wsSrc As Worksheet
+    Set wsSrc = ActiveSheet
+    
+    Dim lastRow As Long
+    lastRow = wsSrc.Cells(wsSrc.Rows.Count, "A").End(xlUp).Row
+    
+    ' 新しいシート作成
+    Dim wsChart As Worksheet
+    Set wsChart = Sheets.Add(After:=wsSrc)
+    wsChart.Name = "計画vs実績グラフ"
+    
+    ' 見出し
+    wsChart.Range("A1").Value = "計画SEQN"
+    wsChart.Range("B1").Value = "計画固定有人h"
+    wsChart.Range("C1").Value = "実績有人h"
+    wsChart.Range("D1").Value = "差分（実績－計画）"
+    
+    ' データコピー
+    wsSrc.Range("A2:A" & lastRow).Copy Destination:=wsChart.Range("A2")
+    wsSrc.Range("L2:L" & lastRow).Copy Destination:=wsChart.Range("B2")
+    wsSrc.Range("P2:P" & lastRow).Copy Destination:=wsChart.Range("C2")
+    
+    ' 差分列を計算
+    Dim i As Long
+    For i = 2 To lastRow
+        wsChart.Cells(i, "D").FormulaR1C1 = "=RC[-1]-RC[-2]"
+    Next i
+    
+    ' 差分で並び替え（降順）
+    wsChart.Range("A1:D" & lastRow).Sort Key1:=wsChart.Range("D2"), Order1:=xlDescending, Header:=xlYes
+    
+    ' グラフ作成
+    Dim chtObj As ChartObject
+    Set chtObj = wsChart.ChartObjects.Add(Left:=100, Top:=50, Width:=600, Height:=350)
+    
+    With chtObj.Chart
+        .ChartType = xlColumnClustered
+        .SetSourceData Source:=wsChart.Range("A1:C" & lastRow)
+        .HasTitle = True
+        .ChartTitle.Text = "計画固定 vs 実績（差分順）"
+        .Axes(xlCategory).HasTitle = True
+        .Axes(xlCategory).AxisTitle.Text = "計画SEQN"
+        .Axes(xlValue).HasTitle = True
+        .Axes(xlValue).AxisTitle.Text = "人員数（h）"
+        .Legend.Position = xlLegendPositionBottom
+    End With
+    
+    MsgBox "差分順でグラフを作成しました（シート：計画vs実績グラフ）"
+End Sub
