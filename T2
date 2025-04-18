@@ -1,11 +1,3 @@
-Private Sub CommandButton1_Click()
-    Call CreateTSChart ' ← 実行したいマクロ名
-End Sub
-
-Private Sub CommandButton2_Click()
-    Call ExtractLargeDiff
-End Sub
-
-Private Sub CommandButton3_Click()
-    Call OutputOperatorTS
+Sub メニューボードを開く()
+    UserForm1.Show
 End Sub
