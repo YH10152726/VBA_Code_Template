@@ -1,29 +1,11 @@
-Sub 処理メニュー_説明付き()
-    Dim msg As String
-    Dim choice As String
+Private Sub CommandButton1_Click()
+    Call CreateTSChart ' ← 実行したいマクロ名
+End Sub
 
-    msg = "処理を選択してください（番号を入力）:" & vbCrLf & vbCrLf & _
-          "1. TS差分グラフ作成" & vbCrLf & _
-          "   → 計画TSと実績TSの差を棒グラフで可視化します" & vbCrLf & vbCrLf & _
-          "2. 有人差分±1h以上抽出" & vbCrLf & _
-          "   → 実績が計画と±1h以上ズレているデータを抽出します（有人）" & vbCrLf & vbCrLf & _
-          "3. 無人差分±1h以上抽出" & vbCrLf & _
-          "   → 無人作業でTS差分が大きいデータを抽出します" & vbCrLf & vbCrLf & _
-          "4. 作業者別TS平均出力" & vbCrLf & _
-          "   → 作業者ごとの平均TS・差分を一覧で出力します"
+Private Sub CommandButton2_Click()
+    Call ExtractLargeDiff
+End Sub
 
-    choice = InputBox(msg, "処理選択メニュー")
-
-    Select Case choice
-        Case "1"
-            Call CreateTSChart
-        Case "2"
-            Call ExtractLargeDiff有人
-        Case "3"
-            Call ExtractLargeDiff無人
-        Case "4"
-            Call OutputOperatorAverage
-        Case Else
-            MsgBox "処理が選択されていません。", vbInformation
-    End Select
+Private Sub CommandButton3_Click()
+    Call OutputOperatorTS
 End Sub
