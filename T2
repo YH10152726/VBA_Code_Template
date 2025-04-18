@@ -1,49 +1,29 @@
-Sub ConsolidateSEQNDataAndRemoveRows()
-    Dim ws As Worksheet
-    Set ws = ActiveSheet
-    
-    Dim lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-    
-    Dim i As Long
-    Dim currentSEQN As Variant
-    Dim sumActual As Double
-    Dim startRow As Long
-    
-    i = 2 ' ヘッダーの次の行から開始
-    Do While i <= lastRow
-        currentSEQN = ws.Cells(i, "A").Value
-        sumActual = 0
-        startRow = i
-        
-        ' 同じSEQNをまとめて合計
-        Do While ws.Cells(i, "A").Value = currentSEQN And i <= lastRow
-            sumActual = sumActual + Val(ws.Cells(i, "P").Value)
-            i = i + 1
-        Loop
-        
-        ' 1行目以外の計画固定有人hを消す
-        Dim j As Long
-        For j = startRow + 1 To i - 1
-            ws.Cells(j, "L").ClearContents
-        Next j
-        
-        ' 実績有人hを合計して1行目に記載、他は消す
-        ws.Cells(startRow, "P").Value = sumActual
-        For j = startRow + 1 To i - 1
-            ws.Cells(j, "P").ClearContents
-        Next j
-    Loop
+Sub 処理メニュー_説明付き()
+    Dim msg As String
+    Dim choice As String
 
-    ' 再度最終行を取得（データが更新されたため）
-    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-    
-    ' 下から上へループして、L列とP列が両方空白の行を削除
-    For i = lastRow To 2 Step -1
-        If IsEmpty(ws.Cells(i, "L").Value) And IsEmpty(ws.Cells(i, "P").Value) Then
-            ws.Rows(i).Delete
-        End If
-    Next i
+    msg = "処理を選択してください（番号を入力）:" & vbCrLf & vbCrLf & _
+          "1. TS差分グラフ作成" & vbCrLf & _
+          "   → 計画TSと実績TSの差を棒グラフで可視化します" & vbCrLf & vbCrLf & _
+          "2. 有人差分±1h以上抽出" & vbCrLf & _
+          "   → 実績が計画と±1h以上ズレているデータを抽出します（有人）" & vbCrLf & vbCrLf & _
+          "3. 無人差分±1h以上抽出" & vbCrLf & _
+          "   → 無人作業でTS差分が大きいデータを抽出します" & vbCrLf & vbCrLf & _
+          "4. 作業者別TS平均出力" & vbCrLf & _
+          "   → 作業者ごとの平均TS・差分を一覧で出力します"
 
-    MsgBox "集約と不要行削除が完了しました。"
+    choice = InputBox(msg, "処理選択メニュー")
+
+    Select Case choice
+        Case "1"
+            Call CreateTSChart
+        Case "2"
+            Call ExtractLargeDiff有人
+        Case "3"
+            Call ExtractLargeDiff無人
+        Case "4"
+            Call OutputOperatorAverage
+        Case Else
+            MsgBox "処理が選択されていません。", vbInformation
+    End Select
 End Sub
